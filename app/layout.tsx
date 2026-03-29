@@ -1,15 +1,33 @@
+
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bitcount_Prop_Double, Kumar_One, Playwrite_DK_Uloopet_Guides, Pompiere } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+
+import Navbar from "@/components/Navbar";
+
+const nothing = Bitcount_Prop_Double({
+  variable: "--font-bitcount-prop-double",
   subsets: ["latin"],
+  weight: ["400","500","600","700","800","900"]
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const english = Playwrite_DK_Uloopet_Guides({
+  variable: "--font-playwrite-dk-uloopet-guides-regular",
+  weight:"400"
+});
+
+const pompiere = Pompiere({
+  variable: "--font-pompiere",
   subsets: ["latin"],
+  weight: ["400"]
+});
+
+const classy = Kumar_One({
+  variable: "--font-classy",
+  subsets: ["latin"],
+  weight: ["400"]
 });
 
 export const metadata: Metadata = {
@@ -23,11 +41,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${nothing.variable} ${english.variable} ${pompiere.variable} ${classy.variable} antialiased`}
       >
-        {children}
+        <ClerkProvider>
+          <Navbar/>
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
