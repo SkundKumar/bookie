@@ -3,6 +3,8 @@ import Beams from '@/components/Beams'
 import Hero from '@/components/Hero'
 import Image from 'next/image'
 import GradientBlinds from '@/components/GradientBlinds';
+import BookCard from '@/components/BookCard';
+import { sampleBooks } from '@/lib/constants';
 export default async function Page() {
   await auth()
 
@@ -22,7 +24,7 @@ export default async function Page() {
     spotlightRadius={0.5}
     spotlightSoftness={1}
     spotlightOpacity={0.7}
-    mouseDampening={1.15}
+    mouseDampening={0.25}
     distortAmount={0}
     shineDirection="left"
     mixBlendMode="lighten"
@@ -36,6 +38,19 @@ export default async function Page() {
             <Hero />
           </div>
       </div>
+      <div className='library-books-grid mt-10'>
+          {sampleBooks.map((book)=>{
+            {/*slug is usually a URL-friendly identifier for a resource — 
+              in this case, each book. Instead of using the raw database id or
+               title (which might have spaces/special characters), you store a lowercase,
+                hyphenated string like the-alchemist or harry-potter-1. That lets you 
+                build clean routes such as /books/the-alchemist, fetch the right book on the server,
+                 and display it via book.slug. So passing slug={book.slug} to BookCard means the card can 
+                 link to or otherwise reference the specific book’s detail page without hardcoding the URL every time.
+              */}
+            return <BookCard key={book._id} title={book.title} author={book.author} coverURL ={book.coverURL} slug={book.slug}/>
+          })}
+        </div>
     </main>
   )
 }

@@ -506,8 +506,8 @@
   }
   .glass {
     background-color: transparent;
-    backdrop-filter: blur(15px);
-    --webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(10px);
+    --webkit-backdrop-filter: blur(10px);
    
     
     
@@ -712,7 +712,7 @@
     @apply absolute -left-1 top-2 bottom-2 w-3 bg-gradient-to-r from-[#8B7355] to-[#A08060] rounded-l-md z-0;
   }
   .book-card-cover-wrapper {
-    @apply relative bg-white rounded-[14px] overflow-hidden flex items-center justify-center h-[205px] md:h-[240px];
+    @apply relative bg-transparent rounded-[14px] overflow-hidden flex items-center justify-center h-[205px] md:h-[240px];
   }
   .book-card-cover {
     @apply w-auto h-[170px] md:h-[200px] object-cover rounded-lg;
@@ -722,11 +722,11 @@
     @apply mt-4 md:mt-5 flex-1 flex flex-col gap-1;
   }
   .book-card-title {
-    @apply font-bold text-[#212a3b] line-clamp-1 text-base md:text-xl leading-[22px] md:leading-[30px];
+    @apply font-bold text-[#ffffff] line-clamp-1 text-base md:text-xl leading-[22px] md:leading-[30px];
     font-family: 'IBM Plex Serif', serif;
   }
   .book-card-author {
-    @apply text-sm md:text-base font-medium text-[#3d485e] line-clamp-1;
+    @apply text-sm md:text-base font-medium text-[#f1f2f5] line-clamp-1;
   }
 
   /* ===========================================
