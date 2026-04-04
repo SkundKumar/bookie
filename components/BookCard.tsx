@@ -18,8 +18,7 @@ const BookCard = ({title, author, coverURL, slug}: BookCardProps) => {
 
                     </Image>
                 </div>
-            </figure>
-            <figcaption className='flex flex-col text-center justify-between gap-3 '>
+                <figcaption className='flex flex-col text-center justify-between gap-3 '>
                 <h3 className='book-card-title'>
                     {title}
                 </h3>
@@ -27,6 +26,8 @@ const BookCard = ({title, author, coverURL, slug}: BookCardProps) => {
                     {author} 
                 </h3>
             </figcaption>
+            </figure>
+            
         </article>
     </Link>
   )
