@@ -16,36 +16,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { DEFAULT_VOICE, voiceCategories, voiceOptions } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 const MAX_PDF_SIZE = 50 * 1024 * 1024
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024
-const VOICE_OPTIONS = {
-  dave: {
-    name: 'Dave',
-    description: 'Young male, British-Essex, casual & conversational',
-    group: 'Male Voices',
-  },
-  daniel: {
-    name: 'Daniel',
-    description: 'Middle-aged male, British, authoritative but warm',
-    group: 'Male Voices',
-  },
-  chris: {
-    name: 'Chris',
-    description: 'Male, casual & easy-going',
-    group: 'Male Voices',
-  },
-  rachel: {
-    name: 'Rachel',
-    description: 'Young female, American, calm & clear',
-    group: 'Female Voices',
-  },
-  sarah: {
-    name: 'Sarah',
-    description: 'Young female, American, soft & approachable',
-    group: 'Female Voices',
-  },
+const VOICE_GROUP_LABELS = {
+  male: 'Male Voices',
+  female: 'Female Voices',
 } as const
 
 const formSchema = z.object({
@@ -90,11 +68,19 @@ const UploadForm = () => {
       coverImage: null,
       title: '',
       author: '',
-      voice: 'rachel',
+      voice: DEFAULT_VOICE,
     },
   })
 
-  const onSubmit = async () => {
+  const openPdfPicker = () => {
+    pdfInputRef.current?.click()
+  }
+
+  const openCoverPicker = () => {
+    coverInputRef.current?.click()
+  }
+
+  const onSubmit = async (_values: UploadFormValues) => {
     setIsSubmitting(true)
 
     try {
@@ -120,50 +106,49 @@ const UploadForm = () => {
               <FormItem className='space-y-3'>
                 <FormLabel className='form-label !text-[var(--text-primary)]'>Book PDF File</FormLabel>
                 <FormControl>
-                  <div>
-                    <input
-                      ref={pdfInputRef}
-                      type='file'
-                      accept='application/pdf'
-                      className='hidden'
-                      id='pdf-upload'
-                      onChange={(event) =>
-                        field.onChange(event.target.files?.[0] ?? (undefined as unknown as File))
-                      }
-                    />
-                    <label
-                      htmlFor='pdf-upload'
-                      className={cn(
-                        'upload-dropzone border border-dashed !border-[#4b2a78]/45 glass-form !bg-transparent hover:!bg-[#4b2a78]/12',
-                        field.value && 'upload-dropzone-uploaded !bg-[#4b2a78]/20'
-                      )}
-                    >
-                      <Upload className='upload-dropzone-icon !text-[#8f67d496]' />
-                      <p className='upload-dropzone-text !text-[#8f67d4cc]'>Click to upload PDF</p>
-                      <p className='upload-dropzone-hint !text-[#8f67d496]'>PDF file (max 50MB)</p>
-                    </label>
-                    {field.value && (
-                      <div className='mt-3 flex items-center justify-between rounded-lg bg-white/10 px-3 py-2'>
-                        <p className='text-sm text-[var(--text-primary)] truncate pr-3'>
-                          {field.value.name}
-                        </p>
-                        <button
-                          type='button'
-                          className='upload-dropzone-remove shrink-0'
-                          onClick={() => {
-                            field.onChange(undefined as unknown as File)
-                            if (pdfInputRef.current) {
-                              pdfInputRef.current.value = ''
-                            }
-                          }}
-                          aria-label='Remove PDF file'
-                        >
-                          <X className='size-4' />
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <input
+                    ref={pdfInputRef}
+                    type='file'
+                    accept='application/pdf'
+                    className='sr-only'
+                    id='pdf-upload'
+                    onChange={(event) =>
+                      field.onChange(event.target.files?.[0] ?? (undefined as unknown as File))
+                    }
+                  />
                 </FormControl>
+                <button
+                  type='button'
+                  className={cn(
+                    'upload-dropzone border border-dashed !border-[#4b2a78]/45 glass-form !bg-transparent hover:!bg-[#4b2a78]/12',
+                    field.value && 'upload-dropzone-uploaded !bg-[#4b2a78]/20'
+                  )}
+                  onClick={openPdfPicker}
+                >
+                  <Upload className='upload-dropzone-icon !text-[#8f67d496]' />
+                  <p className='upload-dropzone-text !text-[#8f67d4cc]'>Click to upload PDF</p>
+                  <p className='upload-dropzone-hint !text-[#8f67d496]'>PDF file (max 50MB)</p>
+                </button>
+                {field.value && (
+                  <div className='mt-3 flex items-center justify-between rounded-lg bg-white/10 px-3 py-2'>
+                    <p className='text-sm text-[var(--text-primary)] truncate pr-3'>
+                      {field.value.name}
+                    </p>
+                    <button
+                      type='button'
+                      className='upload-dropzone-remove shrink-0'
+                      onClick={() => {
+                        field.onChange(undefined as unknown as File)
+                        if (pdfInputRef.current) {
+                          pdfInputRef.current.value = ''
+                        }
+                      }}
+                      aria-label='Remove PDF file'
+                    >
+                      <X className='size-4' />
+                    </button>
+                  </div>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -176,48 +161,47 @@ const UploadForm = () => {
               <FormItem className='space-y-3'>
                 <FormLabel className='form-label !text-[var(--text-primary)]'>Cover Image (Optional)</FormLabel>
                 <FormControl>
-                  <div>
-                    <input
-                      ref={coverInputRef}
-                      type='file'
-                      accept='image/jpeg,image/jpg,image/png,image/webp'
-                      className='hidden'
-                      id='cover-upload'
-                      onChange={(event) => field.onChange(event.target.files?.[0] ?? null)}
-                    />
-                    <label
-                      htmlFor='cover-upload'
-                      className={cn(
-                        'upload-dropzone border border-dashed !border-[#4b2a78]/45 !bg-transparent glass-form hover:!bg-[#4b2a78]/12',
-                        field.value && 'upload-dropzone-uploaded !bg-[#4b2a78]/20'
-                      )}
-                    >
-                      <ImagePlus className='upload-dropzone-icon !text-[#8f67d496]' />
-                      <p className='upload-dropzone-text !text-[#8f67d4cc]'>Click to upload cover image</p>
-                      <p className='upload-dropzone-hint !text-[#8f7ab7]'>Leave empty to auto-generate from PDF</p>
-                    </label>
-                    {field.value && (
-                      <div className='mt-3 flex items-center justify-between rounded-lg bg-white/10 px-3 py-2'>
-                        <p className='text-sm text-[var(--text-primary)] truncate pr-3'>
-                          {field.value.name}
-                        </p>
-                        <button
-                          type='button'
-                          className='upload-dropzone-remove shrink-0'
-                          onClick={() => {
-                            field.onChange(null)
-                            if (coverInputRef.current) {
-                              coverInputRef.current.value = ''
-                            }
-                          }}
-                          aria-label='Remove cover image'
-                        >
-                          <X className='size-4' />
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <input
+                    ref={coverInputRef}
+                    type='file'
+                    accept='image/jpeg,image/jpg,image/png,image/webp'
+                    className='sr-only'
+                    id='cover-upload'
+                    onChange={(event) => field.onChange(event.target.files?.[0] ?? null)}
+                  />
                 </FormControl>
+                <button
+                  type='button'
+                  className={cn(
+                    'upload-dropzone border border-dashed !border-[#4b2a78]/45 !bg-transparent glass-form hover:!bg-[#4b2a78]/12',
+                    field.value && 'upload-dropzone-uploaded !bg-[#4b2a78]/20'
+                  )}
+                  onClick={openCoverPicker}
+                >
+                  <ImagePlus className='upload-dropzone-icon !text-[#8f67d496]' />
+                  <p className='upload-dropzone-text !text-[#8f67d4cc]'>Click to upload cover image</p>
+                  <p className='upload-dropzone-hint !text-[#8f7ab7]'>Leave empty to auto-generate from PDF</p>
+                </button>
+                {field.value && (
+                  <div className='mt-3 flex items-center justify-between rounded-lg bg-white/10 px-3 py-2'>
+                    <p className='text-sm text-[var(--text-primary)] truncate pr-3'>
+                      {field.value.name}
+                    </p>
+                    <button
+                      type='button'
+                      className='upload-dropzone-remove shrink-0'
+                      onClick={() => {
+                        field.onChange(null)
+                        if (coverInputRef.current) {
+                          coverInputRef.current.value = ''
+                        }
+                      }}
+                      aria-label='Remove cover image'
+                    >
+                      <X className='size-4' />
+                    </button>
+                  </div>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -267,36 +251,37 @@ const UploadForm = () => {
                 <FormLabel className='form-label !text-[var(--text-primary)]'>Choose Assistant Voice</FormLabel>
                 <FormControl>
                   <div className='space-y-4'>
-                    {['Male Voices', 'Female Voices'].map((groupName) => (
-                      <div key={groupName} className='space-y-2'>
-                        <p className='text-sm text-[var(--text-secondary)]'>{groupName}</p>
+                    {Object.entries(voiceCategories).map(([category, keys]) => (
+                      <div key={category} className='space-y-2'>
+                        <p className='text-sm text-[var(--text-secondary)]'>
+                          {VOICE_GROUP_LABELS[category as keyof typeof VOICE_GROUP_LABELS]}
+                        </p>
                         <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-                          {Object.entries(VOICE_OPTIONS)
-                            .filter(([, option]) => option.group === groupName)
-                            .map(([voiceKey, option]) => {
-                              const isSelected = field.value === voiceKey
+                          {keys.map((voiceKey) => {
+                            const option = voiceOptions[voiceKey as keyof typeof voiceOptions]
+                            const isSelected = field.value === voiceKey
 
-                              return (
-                                <button
-                                  key={voiceKey}
-                                  type='button'
-                                  onClick={() => field.onChange(voiceKey)}
-                                  className={cn(
-                                    'voice-selector-option flex-col items-start text-left glass-form !bg-transparent hover:!bg-[#4b2a78]/5',
-                                    isSelected
-                                      ? 'voice-selector-option-selected border !border-[#4b2a78] !bg-[#4b2a78]/25'
-                                      : 'voice-selector-option-default'
-                                  )}
-                                >
-                                  <span className='text-base font-semibold text-[var(--text-primary)]'>
-                                    {option.name}
-                                  </span>
-                                  <span className='text-xs text-[var(--text-secondary)] leading-relaxed'>
-                                    {option.description}
-                                  </span>
-                                </button>
-                              )
-                            })}
+                            return (
+                              <button
+                                key={voiceKey}
+                                type='button'
+                                onClick={() => field.onChange(voiceKey)}
+                                className={cn(
+                                  'voice-selector-option flex-col items-start text-left glass-form !bg-transparent hover:!bg-[#4b2a78]/5',
+                                  isSelected
+                                    ? 'voice-selector-option-selected border !border-[#4b2a78] !bg-[#4b2a78]/25'
+                                    : 'voice-selector-option-default'
+                                )}
+                              >
+                                <span className='text-base font-semibold text-[var(--text-primary)]'>
+                                  {option.name}
+                                </span>
+                                <span className='text-xs text-[var(--text-secondary)] leading-relaxed'>
+                                  {option.description}
+                                </span>
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
                     ))}
