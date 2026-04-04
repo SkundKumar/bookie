@@ -15,7 +15,7 @@ const Navbar = () => {
     //destructuring the user to get the first name last name etc and we used it below.
     const { user } = useUser();
   return (
-    <header className='w-full fixed z-50 bg-(`--bg-primary`)'>
+    <header className='w-full fixed z-50 glass rounded-4xl '>
         
         <div className='wrapper navbar-height py-4 flex justify-between items-center'>
             <Link href={"/"} className='flex gap-0.5 items-center text-md font-classy'>Bookie</Link>

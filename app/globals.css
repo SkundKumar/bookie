@@ -507,7 +507,7 @@
   .glass {
     background-color: transparent;
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    --webkit-backdrop-filter: blur(10px);
    
     
     
@@ -516,7 +516,7 @@
   .glass-form {
     background-color: transparent;
     backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
+    --webkit-backdrop-filter: blur(22px);
   }
   
   .library-hero-grid {
