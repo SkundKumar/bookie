@@ -5,9 +5,13 @@ import Image from 'next/image'
 import GradientBlinds from '@/components/GradientBlinds';
 import BookCard from '@/components/BookCard';
 import { sampleBooks } from '@/lib/constants';
+import { BookFetch } from '@/lib/actions/book.actions';
 export default async function Page() {
   await auth()
-
+  const bookresponse = await BookFetch();
+  // the ?? is a nullish coalescing operator that will return the value on the right if the value on the left is null or undefined.
+  //  so if bookresponse.data is null or undefined it will return an empty array instead of throwing an error when we try to map over it in the BookCard component. this way we can avoid the error and still render the page with an empty library section. if bookresponse.success is false then we also return an empty array as we dont have any data to show.
+  const books = bookresponse.success? bookresponse.data ?? [] : [];
 
   return (
     <main className='relative min-h-screen w-full overflow-hidden'>
@@ -39,7 +43,7 @@ export default async function Page() {
           </div>
       </div>
       <div className='library-books-grid mt-10'>
-          {sampleBooks.map((book)=>{
+          {books.map((book)=>{
             {/*slug is usually a URL-friendly identifier for a resource — 
               in this case, each book. Instead of using the raw database id or
                title (which might have spaces/special characters), you store a lowercase,

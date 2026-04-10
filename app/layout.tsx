@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Bitcount_Prop_Double, Kumar_One, Playwrite_DK_Uloopet_Guides, Pompiere } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
-
+import { Toaster } from "sonner";
 
 import Navbar from "@/components/Navbar";
 
@@ -50,6 +50,7 @@ export default function RootLayout({
           <Navbar/>
           {children}
         </ClerkProvider>
+        <Toaster/>
       </body>
     </html>
   );
