@@ -56,6 +56,8 @@ export function useVapi(book: IBook) {
     const startTimeRef = useRef<number | null>(null);
     const sessionIdRef = useRef<string | null>(null);
     const isStoppingRef = useRef(false);
+    const lastUpdateTimeRef = useRef<number>(0);
+    const THROTTLE_MS = 30; // Throttle partial transcripts to every 30ms for smooth streaming
 
     // Keep refs in sync with latest values for use in callbacks
     const maxDurationSeconds = limits?.maxDurationPerSession ? limits.maxDurationPerSession * 60 : (15 * 60);
@@ -144,15 +146,23 @@ export function useVapi(book: IBook) {
                     setCurrentUserMessage('');
                 }
 
-                // Partial user transcript → show real-time typing
+                // Partial user transcript → show real-time typing (throttled)
                 if (message.role === 'user' && message.transcriptType === 'partial') {
-                    setCurrentUserMessage(message.transcript);
+                    const now = Date.now();
+                    if (now - lastUpdateTimeRef.current >= THROTTLE_MS) {
+                        setCurrentUserMessage(message.transcript);
+                        lastUpdateTimeRef.current = now;
+                    }
                     return;
                 }
 
-                // Partial AI transcript → show word-by-word
+                // Partial AI transcript → show word-by-word (throttled)
                 if (message.role === 'assistant' && message.transcriptType === 'partial') {
-                    setCurrentMessage(message.transcript);
+                    const now = Date.now();
+                    if (now - lastUpdateTimeRef.current >= THROTTLE_MS) {
+                        setCurrentMessage(message.transcript);
+                        lastUpdateTimeRef.current = now;
+                    }
                     return;
                 }
 
