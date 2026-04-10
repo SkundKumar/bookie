@@ -1,9 +1,9 @@
 'use server'
 import { CreateBook, TextSegment } from "@/types";
 import { connectToDatabase } from "@/database/mongoose";
-import { generateSlug } from "../utils";
+import mongoose from "mongoose";
+import { generateSlug, serializeData, escapeRegex } from "../utils";
 import Book from "@/database/models/book.model";
-import { serializeData } from "../utils";
 import { success } from "zod";
 import BookSegment from "@/database/models/book-segment.model";
 import { connect } from "http2";
