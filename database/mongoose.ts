@@ -1,10 +1,12 @@
 import mongoose from 'mongoose';
-//asking for the env variable.
-const MONGODB_URI = process.env.MONGODB_URI || '';
-//just a precaustion so that its easy to debug if the env variable is not set.
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable');
-}
+
+const getMongoUri = () => {
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+        throw new Error('Please define the MONGODB_URI environment variable');
+    }
+    return uri;
+};
 //declare a global variable to cache the connection so as to reduce duplication and imporve performance
 declare global {
     //make a global variable mongoosecache
@@ -21,12 +23,13 @@ declare global {
 let cached = global.mongooseCache || (global.mongooseCache = {conn: null, promise:null});
 //create an async function as we are going to use await for the connection and we are going to export it so that we can use it in other files.
 export const connectToDatabase = async ()=>{
+    const mongoUri = getMongoUri();
     //if in cache we find conn then we use it as it is
     if(cached.conn) return cached.conn;
     //or if we dont find a promise(its like if we see from a far that a connection is coming but in this case if we see nothing)
     // then we we are going to make a connection request and store it in a promise so we can wait for it to come and set the buffer to false as to not queue requests
     if(!cached.promise){
-        cached.promise = mongoose.connect(MONGODB_URI,{bufferCommands: false});
+        cached.promise = mongoose.connect(mongoUri,{bufferCommands: false});
     }
     // we try to put the connection that we should get from the promise in the cached conn, if we get it good if not
     try {
