@@ -127,3 +127,29 @@ export const saveSegment = async(clerkId: string, bookId: string, segments: Text
         }
     }
 }
+
+export const getBookBySlug = async (slug: string) => {
+    try {
+        await connectToDatabase();
+
+        const book = await Book.findOne({ slug }).lean();
+        if (!book) {
+            return {
+                success: false,
+                data: null,
+            };
+        }
+
+        return {
+            success: true,
+            data: serializeData(book),
+        };
+    } catch (error) {
+        console.error('Error fetching book by slug:', error);
+        return {
+            success: false,
+            data: null,
+            error,
+        };
+    }
+}
