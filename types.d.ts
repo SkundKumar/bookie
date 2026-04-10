@@ -44,7 +44,6 @@ export interface IVoiceSession extends Document {
     startedAt: Date;
     endedAt?: Date;
     durationSeconds: number;
-    billingPeriodStart: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -115,4 +114,19 @@ export interface FileUploadFieldProps<T extends FieldValues> {
     icon: LucideIcon;
     placeholder: string;
     hint: string;
+}
+
+// ============================================
+// SERVER ACTION RESULT TYPES
+// ============================================
+
+export interface StartSessionResult {
+    success: boolean;
+    sessionId?: string;
+    error?: string;
+}
+
+export interface EndSessionResult {
+    success: boolean;
+    error?: string;
 }

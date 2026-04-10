@@ -2,7 +2,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation';
-import { Show, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs';
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -12,8 +12,6 @@ const navItems = [
 ]
 const Navbar = () => {
     const pathName = usePathname();
-    //destructuring the user to get the first name last name etc and we used it below.
-    const { user } = useUser();
   return (
     <header className='w-full fixed z-50 glass rounded-4xl '>
         
@@ -41,16 +39,6 @@ const Navbar = () => {
             <Show when='signed-in'>
                 <div className='nav-user-link'>
                     <UserButton />
-                    {/*
-                    first we checked if the user exists we read the 
-                    firstname(thats why user?.firstname)
-                     and then we dispayed it below.
-                    */}
-                    {user?.firstName && (
-                        <Link href={'/subscriptions'} className=' font-classy text-sm nav-user-name'>
-                            {user.firstName}
-                        </Link>
-                    )}
                 </div>
             </Show>
         </nav>
