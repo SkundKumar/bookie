@@ -172,7 +172,7 @@ const UploadForm = () => {
       if(book.alreadyExists){
        toast.info("A book with this title already exists. Redirecting you to the book page...")
         form.reset();
-        router.push(`/book/${bookExist.data.slug}`);
+        router.push(`/book/${book.data.slug}`);
         return
       }
       //now else we create the segment
@@ -273,7 +273,7 @@ const UploadForm = () => {
                       accept='image/jpeg,image/jpg,image/png,image/webp'
                       className='hidden'
                       id='cover-upload'
-                      onChange={(event) => field.onChange(event.target.files?.[0] ?? null)}
+                      onChange={(event) => field.onChange(event.target.files?.[0] ?? undefined)}
                     />
                     <label
                       htmlFor='cover-upload'
@@ -295,7 +295,7 @@ const UploadForm = () => {
                           type='button'
                           className='upload-dropzone-remove shrink-0'
                           onClick={() => {
-                            field.onChange(null)
+                            field.onChange(undefined)
                             if (coverInputRef.current) {
                               coverInputRef.current.value = ''
                             }

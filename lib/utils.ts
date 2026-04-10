@@ -122,8 +122,8 @@ export async function parsePDFFile(file: File) {
     }
 
     await firstPage.render({
-      canvasContext: context,
-      viewport: viewport,
+      canvas,
+      viewport,
     }).promise;
 
     // Convert canvas to data URL
