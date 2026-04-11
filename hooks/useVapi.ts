@@ -250,17 +250,94 @@ export function useVapi(book: IBook) {
             const contextResult = await getConversationContext(userId, book._id, 10);
             const pastMessages = contextResult.success ? contextResult.messages || [] : [];
             
-            // Build context string from past messages
-            let contextString = '';
+            // Extract key topics from past messages for Vapi to reference
+            const extractTopics = (messages: Array<{role: string; content: string}>) => {
+                if (messages.length === 0) return '';
+                
+                // Get last 3 user messages as topics discussed
+                const userMessages = messages
+                    .filter(msg => msg.role === 'user')
+                    .slice(-3)
+                    .map(msg => {
+                        // Extract first sentence as topic
+                        const topic = msg.content.split('.')[0].substring(0, 60).trim();
+                        return topic;
+                    })
+                    .filter(t => t.length > 0);
+                
+                if (userMessages.length === 0) return '';
+                
+                return `[Context: We were discussing - ${userMessages.join('; ')}]`;
+            };
+
+            const topicsSummary = extractTopics(pastMessages);
+            
+            // Determine greeting based on context
+            let firstMessage = '';
+            let conversationHistory: Array<{ role: string; content: string }> = [];
+
             if (pastMessages.length > 0) {
-                contextString = '\n\nPrevious conversation context:\n';
-                pastMessages.forEach((msg) => {
-                    contextString += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
-                });
-                contextString += '\n---\n\nContinue the conversation naturally from where you left off.';
+                // Returning user - personalized welcome based on book theme
+                const greetingMap: Record<string, string> = {
+                    'atomic-habits': 'Welcome back to building better each day. I remember where we left off.',
+                    'clean-code': 'Welcome back. Let\'s continue crafting better code together.',
+                    'the-pragmatic-programmer': 'Welcome back, let\'s keep exploring the pragmatic path.',
+                    '72-demons-of-goetia': 'Welcome back. The spirits remember your work with them.',
+                    'deep-work': 'Welcome back. Let\'s dive deeper into focus and meaning.',
+                    'brave-new-world': 'Welcome back to this strange new world we\'ve been exploring.',
+                    'rich-dad-poor-dad': 'Welcome back. Let\'s continue your financial education.',
+                    'how-to-win-friends-and-influence-people': 'Welcome back. Ready to dive deeper into human nature?',
+                    '1984': 'Welcome back. The truth of {{title}} awaits.',
+                };
+
+                firstMessage = greetingMap[book.slug] 
+                    || `Welcome back. I remember our conversation about {{title}}. What shall we explore next?`;
+                
+                firstMessage = firstMessage.replace(/{{title}}/g, book.title);
+
+                // Combine greeting with context for Vapi (context is silent, only greeting is spoken)
+                firstMessage = topicsSummary ? `${topicsSummary}\n\n${firstMessage}` : firstMessage;
+
+                // Build conversation history from past messages for context
+                conversationHistory = pastMessages.map(msg => ({
+                    role: msg.role,
+                    content: msg.content
+                }));
+
+                console.log(`📚 [useVapi] Returning user - ${pastMessages.length} past messages loaded`, { topics: topicsSummary });
+            } else {
+                // Fresh start - warm greeting without the reading status question
+                const welcomeMap: Record<string, string> = {
+                    'atomic-habits': 'Hey, let\'s talk about building better habits and improving every day. What\'s on your mind?',
+                    'clean-code': 'Welcome to the world of clean code. What would you like to explore first?',
+                    'the-pragmatic-programmer': 'Welcome. Let\'s discuss being a pragmatic programmer. What interests you?',
+                    '72-demons-of-goetia': 'Greetings. We stand at the threshold between worlds. What draws you here?',
+                    'deep-work': 'Welcome. Let\'s explore deep work and creating meaningfully. What\'s your interest?',
+                    'brave-new-world': 'Welcome to this exploration of a strange new world. Where should we start?',
+                    'rich-dad-poor-dad': 'Welcome. Let\'s talk about money, assets, and building wealth. What interests you?',
+                    'how-to-win-friends-and-influence-people': 'Welcome. Let\'s dive into understanding people and human nature. What sparked your curiosity?',
+                    '1984': 'Welcome to {{title}}. A dangerous and vital book. What draws you to it?',
+                };
+
+                firstMessage = welcomeMap[book.slug] 
+                    || `Hey, I\'m {{title}} by {{author}}. What would you like to explore?`;
+                
+                firstMessage = firstMessage
+                    .replace(/{{title}}/g, book.title)
+                    .replace(/{{author}}/g, book.author);
+
+                console.log(`🆕 [useVapi] Fresh start - no history loaded`);
             }
 
-            const firstMessage = `Hey, good to meet you. Quick question before we dive in - have you actually read ${book.title} yet, or are we starting fresh?${contextString}`;
+            // Build messages array with conversation history for Vapi
+            const messages: Array<{ role: string; content: string }> = [
+                ...conversationHistory,
+                // Add a system context about the book (silent context, not spoken)
+                {
+                    role: 'system',
+                    content: `You are speaking as the book "${book.title}" by ${book.author}. Your identity comes from the actual content retrieved via searchBook. Keep responses to 2-3 sentences. Always end with a question. Speak naturally as if in conversation.`
+                }
+            ];
 
             await getVapi().start(ASSISTANT_ID, {
                 firstMessage,
@@ -268,6 +345,8 @@ export function useVapi(book: IBook) {
                     title: book.title,
                     author: book.author,
                     bookId: book._id,
+                    slug: book.slug,
+                    conversationContext: topicsSummary,
                 },
                 voice: {
                     provider: '11labs' as const,
@@ -279,11 +358,13 @@ export function useVapi(book: IBook) {
                     useSpeakerBoost: VOICE_SETTINGS.useSpeakerBoost,
                 },
             });
+
+            console.log(`✅ [useVapi] Call started with ${conversationHistory.length} context messages`);
         } catch (err) {
             console.error('Failed to start call:', err);
             setStatus('idle');
         }
-    }, [book._id, book.title, book.author, voice, userId]);
+    }, [book._id, book.title, book.author, book.slug, voice, userId]);
 
     const stop = useCallback(() => {
         isStoppingRef.current = true;

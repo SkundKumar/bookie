@@ -45,7 +45,10 @@ async function processBookSearch(bookId: unknown, query: unknown) {
     }
 
     const combinedText = searchResult.data
-        .map((segment) => (segment as { content: string }).content)
+        .map((segment: any) => {
+            const pageInfo = segment.pageNumber ? ` [Page ${segment.pageNumber}]` : '';
+            return `${segment.content}${pageInfo}`;
+        })
         .join('\n\n');
 
     console.log('📝 [searchBook] Results prepared', { 
