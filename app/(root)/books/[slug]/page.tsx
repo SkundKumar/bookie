@@ -14,7 +14,7 @@ const BookDetailsPage = async ({ params }: BookDetailsPageProps) => {
   const { userId } = await auth()
 
   if (!userId) {
-    redirect('/sign-in')
+    redirect('/?signup=true')
   }
 
   const { slug } = await params

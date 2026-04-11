@@ -1,8 +1,20 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
 
 const Hero = () => {
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (searchParams.get('signup') === 'true') {
+      toast.info('Please sign up to access books')
+    }
+  }, [searchParams])
+
   return (
     <section className='glass w-full rounded-lg p-5 sm:p-6 md:p-8 '>
 
