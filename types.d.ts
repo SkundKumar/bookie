@@ -48,6 +48,18 @@ export interface IVoiceSession extends Document {
     updatedAt: Date;
 }
 
+export interface IConversationMessage extends Document {
+    _id: string;
+    clerkId: string;
+    sessionId: Types.ObjectId;
+    bookId: Types.ObjectId;
+    role: 'user' | 'assistant';
+    content: string;
+    messageIndex: number;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 // ============================================
 // FORM & INPUT TYPES
 // ============================================

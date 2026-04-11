@@ -9,7 +9,7 @@ import { useAuth } from '@clerk/nextjs';
 import { ASSISTANT_ID, DEFAULT_VOICE, VOICE_SETTINGS } from '@/lib/constants';
 import { getVoice } from '@/lib/utils';
 import { IBook, Messages } from '@/types';
-import { startVoiceSession, endVoiceSession } from '@/lib/actions/session.actions';
+import { startVoiceSession, endVoiceSession, saveConversationMessage, getConversationContext } from '@/lib/actions/session.actions';
 
 export function useLatestRef<T>(value: T) {
     const ref = useRef(value);
@@ -54,6 +54,7 @@ export function useVapi(book: IBook) {
     const isStoppingRef = useRef(false);
     const lastUpdateTimeRef = useRef<number>(0);
     const THROTTLE_MS = 30; // Throttle partial transcripts to every 30ms for smooth streaming
+    const messageIndexRef = useRef<number>(0); // Track message count for ordering
 
     // Keep refs in sync with latest values for use in callbacks
     const durationRef = useLatestRef(duration);
@@ -159,6 +160,20 @@ export function useVapi(book: IBook) {
                         const isDupe = prev.some(
                             (m) => m.role === message.role && m.content === message.transcript,
                         );
+                        if (!isDupe) {
+                            // Save message to database
+                            if (sessionIdRef.current && userId) {
+                                saveConversationMessage(
+                                    userId,
+                                    sessionIdRef.current,
+                                    book._id,
+                                    message.role as 'user' | 'assistant',
+                                    message.transcript,
+                                    messageIndexRef.current
+                                ).catch(err => console.error('Failed to save message:', err));
+                                messageIndexRef.current++;
+                            }
+                        }
                         return isDupe ? prev : [...prev, { role: message.role, content: message.transcript }];
                     });
                 }
@@ -229,8 +244,23 @@ export function useVapi(book: IBook) {
             }
 
             sessionIdRef.current = result.sessionId || null;
+            messageIndexRef.current = 0; // Reset message index for new session
 
-            const firstMessage = `Hey, good to meet you. Quick question before we dive in - have you actually read ${book.title} yet, or are we starting fresh?`;
+            // Load conversation history for context
+            const contextResult = await getConversationContext(userId, book._id, 10);
+            const pastMessages = contextResult.success ? contextResult.messages || [] : [];
+            
+            // Build context string from past messages
+            let contextString = '';
+            if (pastMessages.length > 0) {
+                contextString = '\n\nPrevious conversation context:\n';
+                pastMessages.forEach((msg) => {
+                    contextString += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
+                });
+                contextString += '\n---\n\nContinue the conversation naturally from where you left off.';
+            }
+
+            const firstMessage = `Hey, good to meet you. Quick question before we dive in - have you actually read ${book.title} yet, or are we starting fresh?${contextString}`;
 
             await getVapi().start(ASSISTANT_ID, {
                 firstMessage,

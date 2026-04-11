@@ -158,13 +158,20 @@ export const searchBookSegments = async (bookId: string, query: string, limit: n
     try {
         await connectToDatabase();
 
-        console.log(`Searching for: "${query}" in book ${bookId}`);
+        console.log(`🔍 [searchBookSegments] Starting search`, {
+            bookId,
+            query,
+            limit,
+            timestamp: new Date().toISOString(),
+        });
 
         const bookObjectId = new mongoose.Types.ObjectId(bookId);
 
         // Try MongoDB text search first (requires text index)
         let segments: Record<string, unknown>[] = [];
         try {
+            console.log(`📚 [searchBookSegments] Attempting MongoDB text search`);
+            
             segments = await BookSegment.find({
                 bookId: bookObjectId,
                 $text: { $search: query },
@@ -173,15 +180,30 @@ export const searchBookSegments = async (bookId: string, query: string, limit: n
                 .sort({ score: { $meta: 'textScore' } })
                 .limit(limit)
                 .lean();
-        } catch {
+
+            console.log(`✅ [searchBookSegments] Text search successful`, { 
+                segmentsFound: segments.length,
+                method: 'text-index'
+            });
+        } catch (textSearchError) {
             // Text index may not exist — fall through to regex fallback
+            console.warn(`⚠️ [searchBookSegments] Text search failed, falling back to regex:`, {
+                error: textSearchError instanceof Error ? textSearchError.message : String(textSearchError),
+            });
             segments = [];
         }
 
         // Fallback: regex search matching ANY keyword
         if (segments.length === 0) {
+            console.log(`🔄 [searchBookSegments] Attempting regex fallback search`);
+            
             const keywords = query.split(/\s+/).filter((k) => k.length > 2);
             const pattern = keywords.map(escapeRegex).join('|');
+
+            console.log(`🔎 [searchBookSegments] Regex pattern`, { 
+                keywords,
+                pattern 
+            });
 
             segments = await BookSegment.find({
                 bookId: bookObjectId,
@@ -191,9 +213,14 @@ export const searchBookSegments = async (bookId: string, query: string, limit: n
                 .sort({ segmentIndex: 1 })
                 .limit(limit)
                 .lean();
+
+            console.log(`✅ [searchBookSegments] Regex search complete`, { 
+                segmentsFound: segments.length,
+                method: 'regex'
+            });
         }
 
-        console.log(`Search complete. Found ${segments.length} results`);
+        console.log(`📊 [searchBookSegments] Search complete. Found ${segments.length} results`);
 
         return {
             success: true,

@@ -9,8 +9,6 @@ const VoiceSessionSchema = new Schema<IVoiceSession>({
     durationSeconds: { type: Number, default: 0, required: true },
 }, { timestamps: true });
 
-VoiceSessionSchema.index({ clerkId: 1 });
-
 const VoiceSession = models.VoiceSession || model<IVoiceSession>('VoiceSession', VoiceSessionSchema);
 
 export default VoiceSession;
