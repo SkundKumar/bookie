@@ -1,0 +1,29 @@
+time=2026-04-12T01:04:06.437+05:30 level=INFO msg="checking for pulumi" path=C:\Users\Skund\AppData\Roaming\sst\bin\pulumi.exe
+time=2026-04-12T01:04:06.684+05:30 level=INFO msg="checking for bun" path=C:\Users\Skund\AppData\Roaming\sst\bin\bun.exe
+time=2026-04-12T01:04:06.724+05:30 level=INFO msg="initializing project" version=4.7.1
+time=2026-04-12T01:04:06.724+05:30 level=INFO msg="esbuild building" out=F:\Codes\bookie\.sst\platform\sst.config.1775936046724.mjs
+time=2026-04-12T01:04:06.734+05:30 level=INFO msg="esbuild built" outfile=F:\Codes\bookie\.sst\platform\sst.config.1775936046724.mjs
+time=2026-04-12T01:04:06.734+05:30 level=INFO msg="evaluating config"
+time=2026-04-12T01:04:06.813+05:30 level=INFO msg="config evaluated"
+time=2026-04-12T01:04:06.815+05:30 level=INFO msg="checking platform"
+time=2026-04-12T01:04:06.816+05:30 level=INFO msg="loading home"
+time=2026-04-12T01:04:06.816+05:30 level=INFO msg="aws credentials found" region=us-east-1 profile=""
+time=2026-04-12T01:04:06.816+05:30 level=INFO msg="fetching bootstrap"
+time=2026-04-12T01:04:08.552+05:30 level=INFO msg="found existing bootstrap" data="{\"version\":5,\"asset\":\"sst-asset-adrfvwsatbuk\",\"assetEcrRegistryId\":\"904615840729\",\"assetEcrUrl\":\"904615840729.dkr.ecr.us-east-1.amazonaws.com/sst-asset\",\"state\":\"sst-state-adrfvwsatbuk\",\"appsyncHttp\":\"\",\"appsyncRealtime\":\"\"}"
+time=2026-04-12T01:04:08.552+05:30 level=INFO msg="loaded config" app=bookie stage=prod
+time=2026-04-12T01:04:08.552+05:30 level=ERROR msg="failed to remove temp log file" err="open C:\\Users\\Skund\\AppData\\Local\\Temp\\F:\\Codes\\bookie\\.sst\\log: The filename, directory name, or volume label syntax is incorrect."
+time=2026-04-12T01:04:08.552+05:30 level=INFO msg="initializing ui" isTTY=true
+time=2026-04-12T01:04:08.553+05:30 level=INFO msg="server port assigned" port=13557
+time=2026-04-12T01:04:08.553+05:30 level=INFO msg="running stack command" service=project.run cmd=deploy
+time=2026-04-12T01:04:08.553+05:30 level=INFO msg=starting service=server
+time=2026-04-12T01:04:08.553+05:30 level=INFO msg="INFO locking app=bookie stage=prod"
+time=2026-04-12T01:04:08.553+05:30 level=INFO msg="INFO getting data key=lock app=bookie stage=prod"
+time=2026-04-12T01:04:08.554+05:30 level=INFO msg=server service=server addr=0.0.0.0:13557
+time=2026-04-12T01:04:08.555+05:30 level=INFO msg="server ready to accept connections" service=server
+time=2026-04-12T01:04:10.848+05:30 level=INFO msg="INFO putting update app=bookie stage=prod"
+time=2026-04-12T01:04:12.193+05:30 level=INFO msg="INFO getting passphrase app=bookie stage=prod"
+time=2026-04-12T01:04:13.971+05:30 level=INFO msg="INFO pulling state app=bookie stage=prod out=F:\\Codes\\bookie\\.sst\\pulumi\\fe6281f67256b062c2ea45f4\\.pulumi\\stacks\\bookie\\prod.json"
+time=2026-04-12T01:04:14.927+05:30 level=INFO msg="INFO unlocking app=bookie stage=prod"
+time=2026-04-12T01:04:16.035+05:30 level=INFO msg="shutting down server" service=server
+time=2026-04-12T01:04:16.035+05:30 level=INFO msg="server done" service=server
+time=2026-04-12T01:04:16.035+05:30 level=ERROR msg="exited with error" err="open F:\\Codes\\bookie\\.sst\\pulumi\\fe6281f67256b062c2ea45f4\\.pulumi\\stacks\\bookie\\prod.json: The system cannot find the path specified."
