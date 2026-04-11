@@ -24,8 +24,6 @@ import { checkIfExist, createBook, saveSegment } from '@/lib/actions/book.action
 import { useAuth } from "@clerk/nextjs"
 import { useRouter } from 'next/navigation'
 
-import { upload } from '@vercel/blob/client'
-
 const VOICE_OPTIONS = {
   dave: {
     name: 'Dave',
@@ -86,6 +84,27 @@ const UploadForm = () => {
     },
   })
 
+  // Helper function to handle transparent S3 upload using the Presigned URL
+  const uploadToS3 = async (file: File | Blob, filename: string, contentType: string) => {
+    const res = await fetch('/api/s3-presigned', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename, contentType })
+    });
+    
+    const { presignedUrl, publicUrl, key } = await res.json();
+    if (!presignedUrl) throw new Error("Failed to get S3 presigned URL");
+
+    const uploadRes = await fetch(presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': contentType }
+    });
+
+    if (!uploadRes.ok) throw new Error('Failed to upload file to S3');
+    return { url: publicUrl, pathname: key };
+  };
+
   const onSubmit = async (data: UploadFormValues) => {
     //here we check if the user exits or not by accesing the uerId from clerk
     if(!userId){
@@ -103,9 +122,8 @@ const UploadForm = () => {
         form.reset();
         router.push(`/book/${bookExist.data.slug}`);
         return
-
       }
-      // but if the book dont exits we will 
+
       //1. make the file name sent by user into a slug, why here when we did it in server action?
       //its because here we are not sending it to the mongodb we are going to store it somewhere else and need to make a slug for that and after we stroe it there we will store the where we stored and stuff to the mongodb
       const pdfName = data.title.replace(/\s+/g,'-').toLowerCase();
@@ -118,14 +136,11 @@ const UploadForm = () => {
         toast.error("Failed to parse PDF file. Please make sure the file is a valid PDF and try again.")
         return;
       }
-      //usign the inbuilt upload fn from vercel blob to upload the pdf file to blob storage
-      //not the parsed one as it is for the ai  we need to sttore the orignal pdf to the blob and 
-      // we will get the access url that we will use to access and display the data if need be 
-      const uploadedPdf = await upload(pdfName,pdf,{
-        access: 'public',  
-        handleUploadUrl: '/api/upload',
-        contentType: 'application/pdf',
-      })
+      
+      // AWS S3 Update: Upload the PDF directly to AWS S3 using our presigned URL helper
+      // The public URL and path (key) are returned identically to how Vercel Blob did it
+      const uploadedPdf = await uploadToS3(pdf, `${pdfName}.pdf`, 'application/pdf');
+
       // we made a let variable to store the cover url as thery are in ifelse block
       // and as soon as we exit the block the data un uploadCover will be gone so we store it in a variable
       let coverUrl: string;
@@ -133,12 +148,8 @@ const UploadForm = () => {
       if(data.coverImage){
         // we access the file object of the cover image just like we did with the pdf
         const coverFile = data.coverImage;
-        // then we upload it to the blob 
-        const uploadCover = await upload(`${pdfName}_cover.png`,coverFile,{
-          access: 'public',
-          handleUploadUrl: '/api/upload',
-          contentType: coverFile.type,
-        })
+        // Upload provided cover strictly to AWS S3
+        const uploadCover = await uploadToS3(coverFile, `${pdfName}_cover.png`, coverFile.type);
         //after upload we save the uploadCover url 
         coverUrl = uploadCover.url;
       }else{
@@ -146,12 +157,9 @@ const UploadForm = () => {
         const response = await fetch(parsedPdf.cover);
         // then using this we turn the base64 text to a file object
         const blob = await response.blob();
-        // we upload it
-        const uploadCover = await upload(`${pdfName}_cover.png`,blob,{
-          access: 'public',
-          handleUploadUrl: '/api/upload',
-      });
-      coverUrl = uploadCover.url; 
+        // Upload auto-generated cover blob to AWS S3
+        const uploadCover = await uploadToS3(blob, `${pdfName}_cover.png`, blob.type || 'image/png');
+        coverUrl = uploadCover.url; 
       }
 
       //now that all that is done we are going to save the book data into mongo db using our server action fn we made earlier
