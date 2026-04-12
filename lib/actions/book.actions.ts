@@ -7,6 +7,16 @@ import Book from "@/database/models/book.model";
 import { success } from "zod";
 import BookSegment from "@/database/models/book-segment.model";
 import { connect } from "http2";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+
+// 1. Initialize the SQS Client OUTSIDE the main function to reuse the connection pool
+const sqsClient = new SQSClient({
+  region: process.env.MY_AWS_REGION || 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY!,
+  },
+});
 
 export const BookFetch = async()=>{
     try {
@@ -61,6 +71,7 @@ export const createBook = async (data: CreateBook)=>{
         // we use .lean as we are just checking if it exist or not so we need nothing more so we use lean. it comes from monoose as well. 
         const existingBook = await Book.findOne({slug}).lean();
         if(existingBook){
+            console.log(">>> [SQS SKIPPED] Book already exists in DB");
             return {
                 success:true,
                 // data: existingBook,
@@ -77,16 +88,40 @@ export const createBook = async (data: CreateBook)=>{
         //if it dont exist
         // we create a newBook using the create fn by mongoose,
         // we ofc apply it on Book a model we defined before and to that we attach the datta slug and initially we set the total segments to 0;
-        const newBook = await Book.create({...data,slug,totalSegments: 0})
+        const newBook = await Book.create({
+            ...data,
+            slug,
+            status: 'processing',
+            totalSegments: 0
+        })
+
+        // SQS Handoff
+        const sqsPayload = {
+            bookId: newBook._id.toString(),
+            s3Key: data.fileURL,
+            coverUrl: data.coverURL,
+            clerkId: data.clerkId || 'anonymous'
+        };
+
+        const command = new SendMessageCommand({
+            QueueUrl: process.env.MY_AMAZON_SQS_QUEUE_URL,
+            MessageBody: JSON.stringify(sqsPayload),
+        });
+
+        console.log(">>> [SQS ATTEMPT] Sending payload:", JSON.stringify(sqsPayload, null, 2));
+        await sqsClient.send(command);
+        console.log(">>> [SQS SUCCESS] Message sent to queue.");
+
         return{
             success: true,
+            message: 'Book is queued for processing',
             // here we are returning the serialised version of our newBook.
             // now we didi the same above when we found the existing data dont get confused due to the naming.
             data: serializeData(newBook),
         }
 
     }catch(e){
-        console.error('Error creating book:', e);
+        console.error(">>> [SQS FATAL ERROR]:", e);
         return {success: false, error: e }
     }
 }

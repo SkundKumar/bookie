@@ -20,7 +20,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { cn, parsePDFFile } from '@/lib/utils'
-import { checkIfExist, createBook, saveSegment } from '@/lib/actions/book.actions'
+import { checkIfExist, createBook } from '@/lib/actions/book.actions'
 import { useAuth } from "@clerk/nextjs"
 import { useRouter } from 'next/navigation'
 
@@ -129,13 +129,6 @@ const UploadForm = () => {
       const pdfName = data.title.replace(/\s+/g,'-').toLowerCase();
       //2. then we will access the js file object that contains all the info about our pdf as we cant just straight up send the pdf so we do it like this
       const pdf = data.pdfFile;
-      // 3. then we pass it to the parsePdf Function in out utils to get the parsed and segmented pdf 
-      const parsedPdf = await parsePDFFile(pdf);
-      //4. if for some reason the lenth of the content is 0 that means we didnt parse so we tell them that and exit out of this
-      if(parsedPdf.content.length === 0){
-        toast.error("Failed to parse PDF file. Please make sure the file is a valid PDF and try again.")
-        return;
-      }
       
       // AWS S3 Update: Upload the PDF directly to AWS S3 using our presigned URL helper
       // The public URL and path (key) are returned identically to how Vercel Blob did it
@@ -143,7 +136,8 @@ const UploadForm = () => {
 
       // we made a let variable to store the cover url as thery are in ifelse block
       // and as soon as we exit the block the data un uploadCover will be gone so we store it in a variable
-      let coverUrl: string;
+      let coverUrl: string = '';
+      
       // if the cover is provided by the user
       if(data.coverImage){
         // we access the file object of the cover image just like we did with the pdf
@@ -152,14 +146,15 @@ const UploadForm = () => {
         const uploadCover = await uploadToS3(coverFile, `${pdfName}_cover.png`, coverFile.type);
         //after upload we save the uploadCover url 
         coverUrl = uploadCover.url;
-      }else{
-        // else we fetch the cover prom our parsedPdf as in our parse function in our util we are taking the first page of pdf and turning into a base64 text to make it the cover image
-        const response = await fetch(parsedPdf.cover);
-        // then using this we turn the base64 text to a file object
-        const blob = await response.blob();
-        // Upload auto-generated cover blob to AWS S3
-        const uploadCover = await uploadToS3(blob, `${pdfName}_cover.png`, blob.type || 'image/png');
-        coverUrl = uploadCover.url; 
+      } else {
+        // Run util to extract first page as a fallback cover
+        const parsedData = await parsePDFFile(pdf);
+        if (parsedData.cover) {
+           const response = await fetch(parsedData.cover);
+           const blob = await response.blob();
+           const uploadCover = await uploadToS3(blob, `${pdfName}_cover.png`, blob.type || 'image/png');
+           coverUrl = uploadCover.url;
+        }
       }
 
       //now that all that is done we are going to save the book data into mongo db using our server action fn we made earlier
@@ -186,14 +181,9 @@ const UploadForm = () => {
         router.push(`/book/${book.data.slug}`);
         return
       }
-      //now else we create the segment
-      const segmentUpload = await saveSegment(userId,book.data._id,parsedPdf.content);
-      if(!segmentUpload.success){
-         toast.error("Failed to save book segments. Please try again.")
-        throw new Error("Failed to save book segments.")
-      }
-        form.reset();
-        router.push('/');
+      
+      form.reset();
+      router.push('/');
       
     } catch (error) {
       //if not we throw errer and tell them to try again

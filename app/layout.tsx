@@ -10,12 +10,14 @@ import Navbar from "@/components/Navbar";
 const nothing = Bitcount_Prop_Double({
   variable: "--font-bitcount-prop-double",
   subsets: ["latin"],
-  weight: ["400","500","600","700","800","900"]
+  weight: ["400","500","600","700","800","900"],
+  adjustFontFallback: false,
 });
 
 const english = Playwrite_DK_Uloopet_Guides({
   variable: "--font-playwrite-dk-uloopet-guides-regular",
-  weight:"400"
+  weight:"400",
+  adjustFontFallback: false,
 });
 
 const pompiere = Pompiere({

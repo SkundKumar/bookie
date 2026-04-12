@@ -3,16 +3,23 @@ import { auth } from '@clerk/nextjs/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-// Initialize the AWS S3 Client using your new .env variables
+// Initialize the AWS S3 Client
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION!,
+  region: process.env.MY_AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY!,
   },
 });
 
 export async function POST(request: Request) {
+  console.log("DEBUG S3:", { bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME, region: process.env.MY_AWS_REGION });
+
+  // Safety check for critical env vars
+  if (!process.env.NEXT_PUBLIC_S3_BUCKET_NAME || !process.env.MY_AWS_REGION) {
+    return NextResponse.json({ error: "Missing Env Vars" }, { status: 500 });
+  }
+
   try {
     // 1. Security Check: Ensure only logged-in users can upload
     const { userId } = await auth();
@@ -32,7 +39,7 @@ export async function POST(request: Request) {
 
     // 4. Create the command telling AWS we want to PUT an object
     const command = new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET_NAME!,
+      Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME,
       Key: key,
       ContentType: contentType,
     });
@@ -42,7 +49,7 @@ export async function POST(request: Request) {
     const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
 
     // Construct the public URL where the file will permanently live
-    const publicUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    const publicUrl = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${process.env.MY_AWS_REGION}.amazonaws.com/${key}`;
 
     return NextResponse.json({ 
       presignedUrl, // The secure upload ticket
